@@ -6,11 +6,14 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -25,7 +28,7 @@ class MainActivity : ComponentActivity() {
         setContent {
             Surface(
                 modifier = Modifier.fillMaxSize(),
-                color = Color(0xFFE3F2FD)
+                color = Color.Black // Mantendo o fundo preto como no seu código atual
             ) {
                 AppNavigation()
             }
@@ -70,10 +73,12 @@ fun AppNavigation() {
 
 @Composable
 fun HomeScreen(onNavigateToPrimes: (Int) -> Unit) {
+    var limiteInput by remember { mutableStateOf("") }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFFE3F2FD)),
+            .background(Color.Black),
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
@@ -90,8 +95,42 @@ fun HomeScreen(onNavigateToPrimes: (Int) -> Unit) {
 
         Spacer(modifier = Modifier.height(30.dp))
 
-        Button(onClick = { onNavigateToPrimes(50) }) {
-            Text("Gerar até 50")
+        OutlinedTextField(
+            value = limiteInput,
+            onValueChange = { newValue ->
+                if (newValue.all { it.isDigit() }) {
+                    limiteInput = newValue
+                }
+            },
+            label = { Text("Digite o limite", color = Color.Gray) },
+            // ✅ Muda a cor do texto digitado
+            textStyle = TextStyle(color = Color.White, fontSize = 18.sp),
+            // ✅ Muda as cores da borda e do texto quando focado/desfocado
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedTextColor = Color.White,
+                unfocusedTextColor = Color.White,
+                focusedBorderColor = Color.Cyan,
+                unfocusedBorderColor = Color.Gray,
+                focusedLabelColor = Color.Cyan,
+                unfocusedLabelColor = Color.Gray
+            ),
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+            modifier = Modifier
+                .padding(horizontal = 32.dp)
+                .fillMaxWidth()
+        )
+
+        Spacer(modifier = Modifier.height(20.dp))
+
+        Button(
+            onClick = {
+                val limite = limiteInput.toIntOrNull() ?: 0
+                onNavigateToPrimes(limite)
+            },
+            enabled = limiteInput.isNotEmpty(),
+            colors = ButtonDefaults.buttonColors(containerColor = Color.Cyan, contentColor = Color.Black)
+        ) {
+            Text("Gerar Primos")
         }
     }
 }
@@ -101,25 +140,30 @@ fun ResultScreen(primes: String, onBack: () -> Unit) {
     Column(
         modifier = Modifier
             .fillMaxSize()
+            .background(Color.Black) // Fundo preto também no resultado
             .padding(16.dp),
         verticalArrangement = Arrangement.Center
     ) {
 
-        Text("Números primos:", fontSize = 20.sp)
+        Text("Números primos:", fontSize = 20.sp, color = Color.White)
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        Text(primes)
+        Text(primes, color = Color.Cyan)
 
         Spacer(modifier = Modifier.height(30.dp))
 
-        Button(onClick = onBack) {
+        Button(
+            onClick = onBack,
+            colors = ButtonDefaults.buttonColors(containerColor = Color.White, contentColor = Color.Black)
+        ) {
             Text("Voltar")
         }
     }
 }
 
 fun gerarPrimos(limite: Int): String {
+    if (limite < 2) return "Nenhum primo encontrado."
     val primos = mutableListOf<Int>()
 
     for (i in 2..limite) {
@@ -135,5 +179,5 @@ fun gerarPrimos(limite: Int): String {
         if (isPrimo) primos.add(i)
     }
 
-    return primos.joinToString(", ")
+    return if (primos.isEmpty()) "Nenhum primo encontrado." else primos.joinToString(", ")
 }
